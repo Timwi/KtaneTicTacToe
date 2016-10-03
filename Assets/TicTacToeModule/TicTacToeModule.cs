@@ -39,10 +39,6 @@ public class TicTacToeModule : MonoBehaviour
     // Remembers the physical order of the keys.
     KMSelectable[] _keypadButtonsPhysical;
 
-    bool _isSerialEven;
-    bool _hasParallel;
-    int _numLitIndicators;
-    int _numUnlitIndicators;
     int _curRow;
     bool _nextUpIsX;
 
@@ -50,7 +46,7 @@ public class TicTacToeModule : MonoBehaviour
     bool?[] _placedX;
     int _numXs;
     int _numOs;
-
+    int _startingRow;
     bool _isSolved;
     bool _justPassed;
 
@@ -87,27 +83,33 @@ public class TicTacToeModule : MonoBehaviour
         }
         PassButton.OnInteract += () => HandlePress(null);
 
+        bool isSerialEven;
+        bool hasParallel;
+        int numLitIndicators;
+        int numUnlitIndicators;
+
         var serial = Bomb.GetSerialNumber();
         if (serial == null)
         {
             // Random values for testing in Unity
-            _isSerialEven = Rnd.Range(0, 2) == 0;
-            _hasParallel = Rnd.Range(0, 2) == 0;
-            _numLitIndicators = Rnd.Range(0, 3);
-            _numUnlitIndicators = Rnd.Range(0, 3);
+            isSerialEven = Rnd.Range(0, 2) == 0;
+            hasParallel = Rnd.Range(0, 2) == 0;
+            numLitIndicators = Rnd.Range(0, 3);
+            numUnlitIndicators = Rnd.Range(0, 3);
         }
         else
         {
             // Actual values during the game
-            _isSerialEven = "02468".Contains(serial[serial.Length - 1]);
-            _hasParallel = Bomb.GetPorts().Contains("Parallel");
-            _numLitIndicators = Bomb.GetOnIndicators().Count();
-            _numUnlitIndicators = Bomb.GetOffIndicators().Count();
+            isSerialEven = "02468".Contains(serial[serial.Length - 1]);
+            hasParallel = Bomb.GetPorts().Contains("Parallel");
+            numLitIndicators = Bomb.GetOnIndicators().Count();
+            numUnlitIndicators = Bomb.GetOffIndicators().Count();
         }
 
-        var low = _isSerialEven ? _hasParallel ? 5 : 4 : _hasParallel ? 1 : 0;
-        var high = _isSerialEven ? _hasParallel ? 7 : 8 : _hasParallel ? 3 : 2;
-        _curRow = _numUnlitIndicators > _numLitIndicators ? low : _numLitIndicators > _numUnlitIndicators ? high : (low + high) / 2;
+        var low = isSerialEven ? hasParallel ? 5 : 4 : hasParallel ? 1 : 0;
+        var high = isSerialEven ? hasParallel ? 7 : 8 : hasParallel ? 3 : 2;
+        _startingRow = numUnlitIndicators > numLitIndicators ? low : numLitIndicators > numUnlitIndicators ? high : (low + high) / 2;
+        _curRow = _startingRow;
         _placedX = new bool?[9];
         _numXs = 0;
         _numOs = 0;
@@ -117,10 +119,10 @@ public class TicTacToeModule : MonoBehaviour
 
         setNextItemRandom();
 
-        Debug.Log("Serial number is " + (_isSerialEven ? "even" : "odd"));
-        Debug.Log("Parallel port: " + (_hasParallel ? "Yes" : "No"));
-        Debug.Log("Lit indicators: " + _numLitIndicators);
-        Debug.Log("Unlit indicators: " + _numUnlitIndicators);
+        Debug.Log("Serial number is " + (isSerialEven ? "even" : "odd"));
+        Debug.Log("Parallel port: " + (hasParallel ? "Yes" : "No"));
+        Debug.Log("Lit indicators: " + numLitIndicators);
+        Debug.Log("Unlit indicators: " + numUnlitIndicators);
         Debug.Log("Starting row: " + _curRow);
     }
 
@@ -135,16 +137,13 @@ public class TicTacToeModule : MonoBehaviour
         NextLabel.text = isX ? "X" : "O";
     }
 
-    void place(int scrIndex, bool x)
+    void place(int scrIndex, bool x, bool display = false)
     {
         _placedX[scrIndex] = x;
         if (x)
             _numXs++;
         else
             _numOs++;
-
-        for (int i = 0; i < 9; i++)
-            KeypadLabels[i].text = _placedX[i] == null ? "" : _placedX[i] == true ? "X" : "O";
 
         if (_numXs + _numOs == 9)
         {
@@ -157,6 +156,23 @@ public class TicTacToeModule : MonoBehaviour
             setNextItemRandom();
             _curRow = (_curRow + 1) % 9;
         }
+
+        emptyKeypad();
+        if (display && !_isSolved)
+            KeypadLabels[scrIndex].text = x ? "X" : "O";
+    }
+
+    void emptyKeypad()
+    {
+        for (int i = 0; i < 9; i++)
+            KeypadLabels[i].text = "";
+    }
+
+    void strike()
+    {
+        _curRow = _startingRow;
+        for (int i = 0; i < 9; i++)
+            KeypadLabels[i].text = _placedX[i] == null ? (i + 1).ToString() : _placedX[i] == true ? "X" : "O";
     }
 
     bool HandlePress(int? index)
@@ -213,7 +229,9 @@ public class TicTacToeModule : MonoBehaviour
 
         Debug.Log("Clicked " + (index == null ? "PASS" : index.ToString()) + "; expected " + (expectation == null ? "PASS" : expectation.ToString()));
 
-        if (index == expectation)
+        if (index != expectation)
+            strike();
+        else
         {
             if (index != null)
             {
@@ -224,17 +242,17 @@ public class TicTacToeModule : MonoBehaviour
             {
                 // Place the X/O in a random location
                 var availableLocations = Enumerable.Range(0, 9).Where(i => _placedX[i] == null).ToList();
-                place(availableLocations[Rnd.Range(0, availableLocations.Count)], _nextUpIsX);
+                var randomLocation = availableLocations[Rnd.Range(0, availableLocations.Count)];
+                place(randomLocation, _nextUpIsX, true);
                 _justPassed = false;
             }
             else
             {
+                emptyKeypad();
                 setNextItem(!_nextUpIsX);
                 _justPassed = true;
             }
         }
-        else
-            Module.HandleStrike();
 
         return false;
     }
