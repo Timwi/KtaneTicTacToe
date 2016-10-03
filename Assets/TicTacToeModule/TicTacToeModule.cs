@@ -87,7 +87,7 @@ public class TicTacToeModule : MonoBehaviour
         }
         PassButton.OnInteract += () => HandlePress(null);
 
-        var serial = KMBombInfoExtensions.GetSerialNumber(Bomb);
+        var serial = Bomb.GetSerialNumber();
         if (serial == null)
         {
             // Random values for testing in Unity
@@ -100,9 +100,9 @@ public class TicTacToeModule : MonoBehaviour
         {
             // Actual values during the game
             _isSerialEven = "02468".Contains(serial[serial.Length - 1]);
-            _hasParallel = KMBombInfoExtensions.GetPorts(Bomb).Contains("Parallel");
-            _numLitIndicators = KMBombInfoExtensions.GetOnIndicators(Bomb).Count();
-            _numUnlitIndicators = KMBombInfoExtensions.GetOffIndicators(Bomb).Count();
+            _hasParallel = Bomb.GetPorts().Contains("Parallel");
+            _numLitIndicators = Bomb.GetOnIndicators().Count();
+            _numUnlitIndicators = Bomb.GetOffIndicators().Count();
         }
 
         var low = _isSerialEven ? _hasParallel ? 5 : 4 : _hasParallel ? 1 : 0;
