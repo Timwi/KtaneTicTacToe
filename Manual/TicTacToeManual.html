@@ -24,40 +24,52 @@
             <h2>On the Subject of Tic-Tac-Toe</h2>
             <p class="flavour-text">
                 All those years of getting ties in Tic-Tac-Toe might finally pay off.
-            </p>
 
-            <p>To defuse this module, all nine buttons must be filled with “X”s and “O”s.</p>
+            <p>To defuse this module, all nine buttons must be filled with “X”s and “O”s.
 
             <p>The display labeled “Up Next:” shows either an “X” or an “O”.  The
                 keypad displays the numbers 1 through 9.  After placing the first piece, the
-                numbers disappear.</p>
+                numbers disappear.
 
-            <p>Use the rules below to determine the Starting Row:</p>
+            <p>The numbers in the chart on the following page indicate the location on the
+                keypad where each piece should be placed.
+
+            <p>Use the rules below to determine the starting row:
             <ol>
-                <li>If the last digit of the serial number is even, the Starting Row value is
-                    either 5, 6, 7, 8, or 9.  Otherwise, the Starting Row is either 1, 2, 3, or 4.</li>
+                <li>If the last digit of the serial number is even, the starting row is
+                    either 5,&nbsp;6,&nbsp;7,&nbsp;8,&nbsp;or&nbsp;9.  Otherwise, the starting row is either 1,&nbsp;2,&nbsp;3,&nbsp;or&nbsp;4.</li>
                 <li>If there is at least one parallel port, use the even values.  Otherwise, use the odd values.</li>
-                <li>If there are more unlit indicators than lit indicators, the Starting Row is the lowest remaining value from rule 2.</li>
-                <li>If there are more lit indicators than unlit indicators, the Starting Row is the highest value remaining from rule 2.</li>
-                <li>If there are an equal number of lit and unlit indicators, the Starting Row is the average of the remaining values from rule 2.</li>
+                <li>If there are more unlit indicators than lit indicators, the starting row is the lowest remaining value from rule&nbsp;2.</li>
+                <li>If there are more lit indicators than unlit indicators, the starting row is the highest value remaining from rule&nbsp;2.</li>
+                <li>If there are an equal number of lit and unlit indicators, the starting row is the average of the remaining values from rule&nbsp;2.</li>
             </ol>
 
-            <p>In the chart below, determine the appropriate placement column based on the relative
-                number of “X”s and “O”s already on the board. Begin at the Starting Row and move down
+            <p>In the chart on the following page, determine the appropriate placement column based on the relative
+                number of “X”s and “O”s already on the board. Begin at the starting row and move down
                 your selected column until you reach a number that corresponds to an unfilled spot on the
-                keypad. If you pass Row 9, continue at Row 1.</p>
+                keypad. If you pass row&nbsp;9, continue at row&nbsp;1.
 
-            <p>The numbers in the chart indicate the location on the keypad where the piece should be placed.
-                If placing the piece in this location would result in a Tic-Tac-Toe, you MUST press “PASS”
+            <p>If placing the piece in this location would result in a tic-tac-toe, you MUST press “PASS”
                 and continue in the same row; otherwise, place the piece by pressing the location on the
-                keypad and then move to the next row in the chart.</p>
+                keypad and then move to the next row in the chart.
 
-            <p>Two passes in a row will result in the displayed piece being placed (and displayed)
-                in a random available space. This may result in a Tic-Tac-Toe; if so, ignore it.</p>
+            <p>Two consecutive passes will result in the displayed piece being placed (and displayed)
+                in one of the available spaces. This may result in a tic-tac-toe but will not
+                incur a strike.
 
-            <p>Upon a strike, the row resets to the initial Starting Row and the keypad displays the
-                placed pieces and remaining numbers.  All previous placements remain until the module is defused.</p>
+            <p>Upon a strike, the row resets to the initial starting row and the keypad displays the
+                placed pieces and remaining numbers.  All previous placements remain until the module is defused.
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 2</div>
+    </div>
 
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Tic-Tac-Toe</span>
+        </div>
+        <div class="page-content">
+            <p><strong>Table 1:</strong> Tic-tac-toe piece placement location chart
             <table class='ttt-table'>
                 <tr><td>
                     <td colspan=2>“X”s &gt; “O”s
@@ -87,6 +99,7 @@
             </table>
 
         </div>
+        <div class="page-footer relative-footer">Page 2 of 2</div>
     </div>
 </div>
 </body></html>
