@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -59,8 +60,19 @@ public class TicTacToeModule : MonoBehaviour
 
     void ActivateModule()
     {
-        // Remember where each button is physically located
-        _keypadButtonsPhysical = KeypadButtons.ToArray();
+        if (!_isActivated)
+        {
+            // Remember where each button is physically located
+            _keypadButtonsPhysical = KeypadButtons.ToArray();
+
+            for (int i = 0; i < 9; i++)
+            {
+                var j = i;
+                _keypadButtonsPhysical[i].OnInteract += () => HandlePress(physicalToScrambled(j));
+            }
+            PassButton.OnInteract += () => HandlePress(null);
+            _isActivated = true;
+        }
 
         // Randomize the order of the keypad buttons
         for (int i = 0; i < 8; i++)
@@ -73,15 +85,6 @@ public class TicTacToeModule : MonoBehaviour
             KeypadLabels[index] = KeypadLabels[8 - i];
             KeypadLabels[8 - i] = t2;
         }
-
-        // Display the numbers
-        for (int i = 0; i < 9; i++)
-        {
-            var j = i;
-            KeypadButtons[i].OnInteract += () => HandlePress(j);
-            KeypadLabels[i].text = (i + 1).ToString();
-        }
-        PassButton.OnInteract += () => HandlePress(null);
 
         bool isSerialEven;
         bool hasParallel;
@@ -115,15 +118,18 @@ public class TicTacToeModule : MonoBehaviour
         _numOs = 0;
         _isSolved = false;
         _justPassed = false;
-        _isActivated = true;
 
         setNextItemRandom();
+        displayKeypad();
 
-        Debug.Log("Serial number is " + (isSerialEven ? "even" : "odd"));
-        Debug.Log("Parallel port: " + (hasParallel ? "Yes" : "No"));
-        Debug.Log("Lit indicators: " + numLitIndicators);
-        Debug.Log("Unlit indicators: " + numUnlitIndicators);
-        Debug.Log("Starting row: " + _curRow);
+        Debug.Log(string.Join("", Enumerable.Range(0, 9).Select(i => (physicalToScrambled(i) + 1) + (i % 3 == 2 ? "\n" : " ")).ToArray()));
+
+        Debug.Log("[TicTacToe] Serial number is " + (isSerialEven ? "even" : "odd"));
+        Debug.Log("[TicTacToe] Parallel port: " + (hasParallel ? "Yes" : "No"));
+        Debug.Log("[TicTacToe] Lit indicators: " + numLitIndicators);
+        Debug.Log("[TicTacToe] Unlit indicators: " + numUnlitIndicators);
+        Debug.Log("[TicTacToe] Starting row: " + (_curRow + 1));
+        logNextExpectation();
     }
 
     void setNextItemRandom()
@@ -134,7 +140,15 @@ public class TicTacToeModule : MonoBehaviour
     void setNextItem(bool isX)
     {
         _nextUpIsX = isX;
-        NextLabel.text = isX ? "X" : "O";
+        NextLabel.text = "";
+        StartCoroutine(setNextItemIter(isX ? "X" : "O"));
+    }
+
+    IEnumerator setNextItemIter(string text)
+    {
+        yield return new WaitForSeconds(Rnd.Range(.5f, 1.5f));
+        if (!_isSolved)
+            NextLabel.text = text;
     }
 
     void place(int scrIndex, bool x, bool display = false)
@@ -157,29 +171,103 @@ public class TicTacToeModule : MonoBehaviour
             _curRow = (_curRow + 1) % 9;
         }
 
-        emptyKeypad();
-        if (display && !_isSolved)
-            KeypadLabels[scrIndex].text = x ? "X" : "O";
+        emptyKeypad(() =>
+        {
+            if (display && !_isSolved)
+                KeypadLabels[scrIndex].text = x ? "X" : "O";
+        });
     }
 
-    void emptyKeypad()
+    void emptyKeypad(Action doAtEnd = null)
     {
-        for (int i = 0; i < 9; i++)
-            KeypadLabels[i].text = "";
+        StartCoroutine(showKeypadIter(i => "", doAtEnd));
+    }
+
+    void displayKeypad()
+    {
+        StartCoroutine(showKeypadIter(i => _placedX[i] == null ? (i + 1).ToString() : _placedX[i] == true ? "X" : "O"));
+    }
+
+    IEnumerator showKeypadIter(Func<int, string> getLabel, Action doAtEnd = null)
+    {
+        for (int x = 0; x < 5; x++)
+        {
+            yield return new WaitForSeconds(.07f);
+            if (_isSolved)
+                yield break;
+            for (int y = 0; y < 3; y++)
+                if (x - y >= 0 && x - y < 3)
+                {
+                    var i = physicalToScrambled(2 * y + x);
+                    KeypadLabels[i].text = getLabel(i);
+                }
+        }
+
+        if (doAtEnd != null)
+        {
+            yield return new WaitForSeconds(.5f);
+            if (!_isSolved)
+                doAtEnd();
+        }
     }
 
     void strike()
     {
+        Module.HandleStrike();
         _curRow = _startingRow;
-        for (int i = 0; i < 9; i++)
-            KeypadLabels[i].text = _placedX[i] == null ? (i + 1).ToString() : _placedX[i] == true ? "X" : "O";
+        displayKeypad();
+    }
+
+    int? getExpectation(bool nextUpIsX, ref int curRow)
+    {
+        // Which button did we expect to be pressed next?
+        var column = (_numXs > _numOs ? 0 : _numXs == _numOs ? 2 : 4) + (nextUpIsX ? 0 : 1);
+        var origRow = curRow;
+        while (_placedX[_data[curRow][column]] != null)
+        {
+            curRow = (curRow + 1) % 9;
+            if (curRow == origRow)
+            {
+                // Failsafe. This should never happen because every column contains the numbers 1–9,
+                // but it could happen if due to a bug _placedX is already full despite the module
+                // not being solved yet.
+                Module.HandlePass();
+                _isSolved = true;
+                return -1;
+            }
+        }
+
+        var expectedIndex = _data[curRow][column];
+
+        // Would pressing this button complete a tic-tac-toe?
+        var wouldCreateTTT = false;
+        var origLocation = scrambledToPhysical(expectedIndex);
+        var origX = origLocation % 3;
+        var origY = origLocation / 3;
+
+        // Check same row
+        wouldCreateTTT |= _placedX[physicalToScrambled((origX + 1) % 3 + (origY * 3))] == nextUpIsX && _placedX[physicalToScrambled((origX + 2) % 3 + (origY * 3))] == nextUpIsX;
+
+        // Check same column
+        wouldCreateTTT |= _placedX[physicalToScrambled(((origY + 1) % 3) * 3 + origX)] == nextUpIsX && _placedX[physicalToScrambled(((origY + 2) % 3) * 3 + origX)] == nextUpIsX;
+
+        // Check “\” diagonal
+        if (origX == origY)
+            wouldCreateTTT |= _placedX[physicalToScrambled(((origX + 1) % 3) * 4)] == nextUpIsX && _placedX[physicalToScrambled(((origX + 2) % 3) * 4)] == nextUpIsX;
+
+        // Check “/” diagonal
+        if (origX == 2 - origY)
+            wouldCreateTTT |= _placedX[physicalToScrambled(6 - 2 * ((origX + 1) % 3))] == nextUpIsX && _placedX[physicalToScrambled(6 - 2 * ((origX + 2) % 3))] == nextUpIsX;
+
+        // If this would create a tic-tac-toe, we expect a PASS, otherwise we expect the correct button
+        return wouldCreateTTT ? (int?)null : expectedIndex;
     }
 
     bool HandlePress(int? index)
     {
         if (!_isActivated)
         {
-            Debug.Log("TicTacToe: Button pressed before module was activated!");
+            Debug.Log("[TicTacToe] Button pressed before module was activated!");
             return false;
         }
 
@@ -190,44 +278,12 @@ public class TicTacToeModule : MonoBehaviour
             return false;
         }
 
-        // Which button did we expect to be pressed next?
-        var column = (_numXs > _numOs ? 0 : _numXs == _numOs ? 2 : 4) + (_nextUpIsX ? 0 : 1);
-        var origRow = _curRow;
-        while (_placedX[_data[_curRow][column]] != null)
-        {
-            _curRow = (_curRow + 1) % 9;
-            if (_curRow == origRow)
-            {
-                // Failsafe. This should never happen because every column contains the numbers 1–9,
-                // but it could happen if due to a bug _placedX is already full despite the module
-                // not being solved yet.
-                Module.HandlePass();
-                _isSolved = true;
-                return false;
-            }
-        }
-        var expectedIndex = _data[_curRow][column];
+        var expectation = getExpectation(_nextUpIsX, ref _curRow);
+        if (expectation == -1)
+            // sanity check failed
+            return false;
 
-        // Would pressing this button complete a tic-tac-toe?
-        var wouldCreateTTT = false;
-        var origLocation = scrambledToPhysical(expectedIndex);
-        var origX = origLocation % 3;
-        var origY = origLocation / 3;
-        // Check same row
-        wouldCreateTTT |= _placedX[physicalToScrambled((origX + 1) % 3 + (origY * 3))] == _nextUpIsX && _placedX[physicalToScrambled((origX + 2) % 3 + (origY * 3))] == _nextUpIsX;
-        // Check same column
-        wouldCreateTTT |= _placedX[physicalToScrambled(((origY + 1) % 3) * 3 + origX)] == _nextUpIsX && _placedX[physicalToScrambled(((origY + 2) % 3) * 3 + origX)] == _nextUpIsX;
-        // Check “\” diagonal
-        if (origX == origY)
-            wouldCreateTTT |= _placedX[physicalToScrambled(((origX + 1) % 3) * 4)] == _nextUpIsX && _placedX[physicalToScrambled(((origX + 2) % 3) * 4)] == _nextUpIsX;
-        // Check “/” diagonal
-        if (origX == 2 - origY)
-            wouldCreateTTT |= _placedX[physicalToScrambled(6 - 2 * ((origX + 1) % 3))] == _nextUpIsX && _placedX[physicalToScrambled(6 - 2 * ((origX + 2) % 3))] == _nextUpIsX;
-
-        // If this would create a tic-tac-toe, we expect a PASS, otherwise we expect the correct button
-        var expectation = wouldCreateTTT ? (int?)null : expectedIndex;
-
-        Debug.Log("Clicked " + (index == null ? "PASS" : index.ToString()) + "; expected " + (expectation == null ? "PASS" : expectation.ToString()));
+        Debug.Log("[TicTacToe] Clicked " + (index == null ? "PASS" : (index + 1).ToString()) + "; expected " + (expectation == null ? "PASS" : (expectation + 1).ToString()));
 
         if (index != expectation)
             strike();
@@ -236,7 +292,7 @@ public class TicTacToeModule : MonoBehaviour
             if (index != null)
             {
                 _justPassed = false;
-                place(expectedIndex, _nextUpIsX);
+                place(expectation.Value, _nextUpIsX);
             }
             else if (_justPassed)
             {
@@ -252,9 +308,21 @@ public class TicTacToeModule : MonoBehaviour
                 setNextItem(!_nextUpIsX);
                 _justPassed = true;
             }
+
+            if (!_isSolved)
+                logNextExpectation();
         }
 
         return false;
+    }
+
+    void logNextExpectation()
+    {
+        int dummy = _curRow;
+        var expectation = getExpectation(_nextUpIsX, ref dummy);
+        if (expectation == null && !_justPassed && getExpectation(!_nextUpIsX, ref dummy) == null)
+            expectation = -2;
+        Debug.Log("[TicTacToe] Next expectation is " + (expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString()));
     }
 
     int physicalToScrambled(int physIndex)
