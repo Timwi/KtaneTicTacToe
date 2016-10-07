@@ -144,11 +144,17 @@ public class TicTacToeModule : MonoBehaviour
         StartCoroutine(setNextItemIter(isX ? "X" : "O"));
     }
 
+    int _setNextItemIter = 0;
+
     IEnumerator setNextItemIter(string text)
     {
+        var iter = ++_setNextItemIter;
         yield return new WaitForSeconds(Rnd.Range(.5f, 1.5f));
-        if (!_isSolved)
+        if (!_isSolved && iter == _setNextItemIter)
+        {
             NextLabel.text = text;
+            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.TitleMenuPressed, this.transform);
+        }
     }
 
     void place(int scrIndex, bool x, bool display = false)
@@ -265,6 +271,8 @@ public class TicTacToeModule : MonoBehaviour
 
     bool HandlePress(int? index)
     {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, this.transform);
+
         if (!_isActivated)
         {
             Debug.Log("[TicTacToe] Button pressed before module was activated!");
