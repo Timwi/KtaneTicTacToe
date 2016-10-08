@@ -49,12 +49,14 @@ public class TicTacToeModule : MonoBehaviour
     int _numOs;
     int _startingRow;
     bool _isSolved;
-    bool _justPassed;
-
+    bool _autoPlaceNext;
     bool _isActivated = false;
 
     void Start()
     {
+        for (int i = 0; i < 9; i++)
+            KeypadLabels[i].text = "XO "[Rnd.Range(0, 3)].ToString();
+        NextLabel.text = "";
         Module.OnActivate += ActivateModule;
     }
 
@@ -117,10 +119,9 @@ public class TicTacToeModule : MonoBehaviour
         _numXs = 0;
         _numOs = 0;
         _isSolved = false;
-        _justPassed = false;
+        _autoPlaceNext = false;
 
-        setNextItemRandom();
-        displayKeypad();
+        StartCoroutine(delayedInitialization());
 
         Debug.Log(string.Join("", Enumerable.Range(0, 9).Select(i => (physicalToScrambled(i) + 1) + (i % 3 == 2 ? "\n" : " ")).ToArray()));
 
@@ -130,6 +131,21 @@ public class TicTacToeModule : MonoBehaviour
         Debug.Log("[TicTacToe] Unlit indicators: " + numUnlitIndicators);
         Debug.Log("[TicTacToe] Starting row: " + (_curRow + 1));
         logNextExpectation();
+    }
+
+    IEnumerator delayedInitialization()
+    {
+        yield return new WaitForSeconds(Rnd.Range(1f, 3f));
+        var numJiggles = Rnd.Range(1, 6);
+        for (int j = 0; j < numJiggles; j++)
+        {
+            for (int i = 0; i < 9; i++)
+                KeypadLabels[i].text = "XO "[Rnd.Range(0, 3)].ToString();
+            yield return new WaitForSeconds(Rnd.Range(.5f, 2f));
+        }
+        displayKeypad();
+        yield return new WaitForSeconds(Rnd.Range(1f, 3f));
+        setNextItemRandom();
     }
 
     void setNextItemRandom()
@@ -157,7 +173,7 @@ public class TicTacToeModule : MonoBehaviour
         }
     }
 
-    void place(int scrIndex, bool x, bool display = false)
+    void place(int scrIndex, bool x, bool display = false, bool doNotSkipRow = false)
     {
         _placedX[scrIndex] = x;
         if (x)
@@ -174,14 +190,9 @@ public class TicTacToeModule : MonoBehaviour
         else
         {
             setNextItemRandom();
-            _curRow = (_curRow + 1) % 9;
+            if (!doNotSkipRow)
+                _curRow = (_curRow + 1) % 9;
         }
-
-        emptyKeypad(() =>
-        {
-            if (display && !_isSolved)
-                KeypadLabels[scrIndex].text = x ? "X" : "O";
-        });
     }
 
     void emptyKeypad(Action doAtEnd = null)
@@ -199,8 +210,6 @@ public class TicTacToeModule : MonoBehaviour
         for (int x = 0; x < 5; x++)
         {
             yield return new WaitForSeconds(.07f);
-            if (_isSolved)
-                yield break;
             for (int y = 0; y < 3; y++)
                 if (x - y >= 0 && x - y < 3)
                 {
@@ -212,8 +221,7 @@ public class TicTacToeModule : MonoBehaviour
         if (doAtEnd != null)
         {
             yield return new WaitForSeconds(.5f);
-            if (!_isSolved)
-                doAtEnd();
+            doAtEnd();
         }
     }
 
@@ -298,24 +306,26 @@ public class TicTacToeModule : MonoBehaviour
         else
         {
             if (index != null)
-            {
-                _justPassed = false;
                 place(expectation.Value, _nextUpIsX);
-            }
-            else if (_justPassed)
+            else
+                setNextItem(!_nextUpIsX);
+
+            if (!_isSolved && _autoPlaceNext)
             {
-                // Place the X/O in a random location
+                // Place something in a random location
                 var availableLocations = Enumerable.Range(0, 9).Where(i => _placedX[i] == null).ToList();
                 var randomLocation = availableLocations[Rnd.Range(0, availableLocations.Count)];
-                place(randomLocation, _nextUpIsX, true);
-                _justPassed = false;
+                var placeX = Rnd.Range(0, 2) == 0;
+                place(randomLocation, placeX, true, true);
+                emptyKeypad(() =>
+                {
+                    KeypadLabels[randomLocation].text = placeX ? "X" : "O";
+                });
             }
             else
-            {
                 emptyKeypad();
-                setNextItem(!_nextUpIsX);
-                _justPassed = true;
-            }
+
+            _autoPlaceNext = !_autoPlaceNext;
 
             if (!_isSolved)
                 logNextExpectation();
@@ -328,9 +338,7 @@ public class TicTacToeModule : MonoBehaviour
     {
         int dummy = _curRow;
         var expectation = getExpectation(_nextUpIsX, ref dummy);
-        if (expectation == null && !_justPassed && getExpectation(!_nextUpIsX, ref dummy) == null)
-            expectation = -2;
-        Debug.Log("[TicTacToe] Next expectation is " + (expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString()));
+        Debug.Log("[TicTacToe] Next expectation is " + (expectation == null ? "PASS" : (expectation + 1).ToString()));
     }
 
     int physicalToScrambled(int physIndex)
