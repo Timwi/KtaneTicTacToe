@@ -49,8 +49,10 @@ public class TicTacToeModule : MonoBehaviour
     int _numOs;
     int _startingRow;
     bool _isSolved;
-    bool _autoPlaceNext;
+    bool _justPassed;
+
     bool _isActivated = false;
+    bool _isInitialized = false;
 
     void Start()
     {
@@ -119,7 +121,7 @@ public class TicTacToeModule : MonoBehaviour
         _numXs = 0;
         _numOs = 0;
         _isSolved = false;
-        _autoPlaceNext = false;
+        _justPassed = false;
 
         StartCoroutine(delayedInitialization());
 
@@ -130,22 +132,51 @@ public class TicTacToeModule : MonoBehaviour
         Debug.Log("[TicTacToe] Lit indicators: " + numLitIndicators);
         Debug.Log("[TicTacToe] Unlit indicators: " + numUnlitIndicators);
         Debug.Log("[TicTacToe] Starting row: " + (_curRow + 1));
-        logNextExpectation();
     }
 
     IEnumerator delayedInitialization()
     {
+        _isInitialized = false;
         yield return new WaitForSeconds(Rnd.Range(1f, 3f));
-        var numJiggles = Rnd.Range(1, 6);
-        for (int j = 0; j < numJiggles; j++)
+        StartCoroutine(initWithJiggles(Rnd.Range(2, 4)));
+    }
+
+    IEnumerator initWithJiggles(int numJigglesLeft)
+    {
+        yield return new WaitForSeconds(Rnd.Range(1f, 2f));
+        if (numJigglesLeft > 0)
         {
-            for (int i = 0; i < 9; i++)
-                KeypadLabels[i].text = "XO "[Rnd.Range(0, 3)].ToString();
-            yield return new WaitForSeconds(Rnd.Range(.5f, 2f));
+            StartCoroutine(showKeypadIter(i => " XO"[Rnd.Range(0, 3)].ToString(), () =>
+            {
+                StartCoroutine(initWithJiggles(numJigglesLeft - 1));
+            }));
         }
-        displayKeypad();
-        yield return new WaitForSeconds(Rnd.Range(1f, 3f));
-        setNextItemRandom();
+        else
+        {
+            // Place 4–6 pieces randomly without creating a tic-tac-toe
+            tryAgain:
+            var available = Enumerable.Range(0, 9).ToList();
+            var numPreplace = Rnd.Range(4, 7);
+            for (int i = 0; i < numPreplace; i++)
+            {
+                tryPlaceAgain:
+                if (available.Count == 0)
+                    goto tryAgain;
+                var placeX = Rnd.Range(0, 2) == 0;
+                var ix = Rnd.Range(0, available.Count);
+                var loc = available[ix];
+                available.RemoveAt(ix);
+                if (wouldCreateTicTacToe(placeX, loc))
+                    goto tryPlaceAgain;
+                place(loc, placeX);
+            }
+
+            displayKeypad();
+            yield return new WaitForSeconds(Rnd.Range(1f, 3f));
+            setNextItemRandom();
+            logNextExpectation();
+            _isInitialized = true;
+        }
     }
 
     void setNextItemRandom()
@@ -173,13 +204,18 @@ public class TicTacToeModule : MonoBehaviour
         }
     }
 
-    void place(int scrIndex, bool x, bool display = false, bool doNotSkipRow = false)
+    void place(int scrIndex, bool x, bool display = false)
     {
         _placedX[scrIndex] = x;
         if (x)
             _numXs++;
         else
             _numOs++;
+    }
+
+    void placeAndProcess(int scrIndex, bool x, bool display = false)
+    {
+        place(scrIndex, x);
 
         if (_numXs + _numOs == 9)
         {
@@ -190,9 +226,14 @@ public class TicTacToeModule : MonoBehaviour
         else
         {
             setNextItemRandom();
-            if (!doNotSkipRow)
-                _curRow = (_curRow + 1) % 9;
+            _curRow = (_curRow + 1) % 9;
         }
+
+        emptyKeypad(() =>
+        {
+            if (display && !_isSolved)
+                KeypadLabels[scrIndex].text = x ? "X" : "O";
+        });
     }
 
     void emptyKeypad(Action doAtEnd = null)
@@ -232,6 +273,32 @@ public class TicTacToeModule : MonoBehaviour
         displayKeypad();
     }
 
+    bool wouldCreateTicTacToe(bool nextUpIsX, int scrambledIndex)
+    {
+        // Would placing this piece complete a tic-tac-toe?
+        var origLocation = scrambledToPhysical(scrambledIndex);
+        var origX = origLocation % 3;
+        var origY = origLocation / 3;
+
+        // Check same row
+        if (_placedX[physicalToScrambled((origX + 1) % 3 + (origY * 3))] == nextUpIsX && _placedX[physicalToScrambled((origX + 2) % 3 + (origY * 3))] == nextUpIsX)
+            return true;
+
+        // Check same column
+        if (_placedX[physicalToScrambled(((origY + 1) % 3) * 3 + origX)] == nextUpIsX && _placedX[physicalToScrambled(((origY + 2) % 3) * 3 + origX)] == nextUpIsX)
+            return true;
+
+        // Check “\” diagonal
+        if (origX == origY && _placedX[physicalToScrambled(((origX + 1) % 3) * 4)] == nextUpIsX && _placedX[physicalToScrambled(((origX + 2) % 3) * 4)] == nextUpIsX)
+            return true;
+        
+        // Check “/” diagonal
+        if (origX == 2 - origY && _placedX[physicalToScrambled(6 - 2 * ((origX + 1) % 3))] == nextUpIsX && _placedX[physicalToScrambled(6 - 2 * ((origX + 2) % 3))] == nextUpIsX)
+            return true;
+
+        return false;
+    }
+
     int? getExpectation(bool nextUpIsX, ref int curRow)
     {
         // Which button did we expect to be pressed next?
@@ -251,30 +318,8 @@ public class TicTacToeModule : MonoBehaviour
             }
         }
 
-        var expectedIndex = _data[curRow][column];
-
-        // Would pressing this button complete a tic-tac-toe?
-        var wouldCreateTTT = false;
-        var origLocation = scrambledToPhysical(expectedIndex);
-        var origX = origLocation % 3;
-        var origY = origLocation / 3;
-
-        // Check same row
-        wouldCreateTTT |= _placedX[physicalToScrambled((origX + 1) % 3 + (origY * 3))] == nextUpIsX && _placedX[physicalToScrambled((origX + 2) % 3 + (origY * 3))] == nextUpIsX;
-
-        // Check same column
-        wouldCreateTTT |= _placedX[physicalToScrambled(((origY + 1) % 3) * 3 + origX)] == nextUpIsX && _placedX[physicalToScrambled(((origY + 2) % 3) * 3 + origX)] == nextUpIsX;
-
-        // Check “\” diagonal
-        if (origX == origY)
-            wouldCreateTTT |= _placedX[physicalToScrambled(((origX + 1) % 3) * 4)] == nextUpIsX && _placedX[physicalToScrambled(((origX + 2) % 3) * 4)] == nextUpIsX;
-
-        // Check “/” diagonal
-        if (origX == 2 - origY)
-            wouldCreateTTT |= _placedX[physicalToScrambled(6 - 2 * ((origX + 1) % 3))] == nextUpIsX && _placedX[physicalToScrambled(6 - 2 * ((origX + 2) % 3))] == nextUpIsX;
-
         // If this would create a tic-tac-toe, we expect a PASS, otherwise we expect the correct button
-        return wouldCreateTTT ? (int?)null : expectedIndex;
+        return wouldCreateTicTacToe(nextUpIsX, _data[curRow][column]) ? (int?)null : _data[curRow][column];
     }
 
     bool HandlePress(int? index)
@@ -284,6 +329,13 @@ public class TicTacToeModule : MonoBehaviour
         if (!_isActivated)
         {
             Debug.Log("[TicTacToe] Button pressed before module was activated!");
+            return false;
+        }
+
+        if (!_isInitialized)
+        {
+            Debug.Log("[TicTacToe] Button pressed before module was initialized.");
+            Module.HandleStrike();
             return false;
         }
 
@@ -306,26 +358,24 @@ public class TicTacToeModule : MonoBehaviour
         else
         {
             if (index != null)
-                place(expectation.Value, _nextUpIsX);
-            else
-                setNextItem(!_nextUpIsX);
-
-            if (!_isSolved && _autoPlaceNext)
             {
-                // Place something in a random location
+                _justPassed = false;
+                placeAndProcess(expectation.Value, _nextUpIsX);
+            }
+            else if (_justPassed)
+            {
+                // Place the X/O in a random location
                 var availableLocations = Enumerable.Range(0, 9).Where(i => _placedX[i] == null).ToList();
                 var randomLocation = availableLocations[Rnd.Range(0, availableLocations.Count)];
-                var placeX = Rnd.Range(0, 2) == 0;
-                place(randomLocation, placeX, true, true);
-                emptyKeypad(() =>
-                {
-                    KeypadLabels[randomLocation].text = placeX ? "X" : "O";
-                });
+                placeAndProcess(randomLocation, _nextUpIsX, true);
+                _justPassed = false;
             }
             else
+            {
                 emptyKeypad();
-
-            _autoPlaceNext = !_autoPlaceNext;
+                setNextItem(!_nextUpIsX);
+                _justPassed = true;
+            }
 
             if (!_isSolved)
                 logNextExpectation();
@@ -338,7 +388,9 @@ public class TicTacToeModule : MonoBehaviour
     {
         int dummy = _curRow;
         var expectation = getExpectation(_nextUpIsX, ref dummy);
-        Debug.Log("[TicTacToe] Next expectation is " + (expectation == null ? "PASS" : (expectation + 1).ToString()));
+        if (expectation == null && !_justPassed && getExpectation(!_nextUpIsX, ref dummy) == null)
+            expectation = -2;
+        Debug.Log("[TicTacToe] Next expectation is " + (expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString()));
     }
 
     int physicalToScrambled(int physIndex)
