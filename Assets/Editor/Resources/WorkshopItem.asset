@@ -16,7 +16,7 @@ MonoBehaviour:
   Description: 'The expert plays tic-tac-toe... while the defuser inputs keys blindly.
 
 
-    Manual: http://clowd.ca/u/2ey'
+    Manual PDF: http://clowd.ca/u/2fi'
   PreviewImage: {fileID: 2800000, guid: bd5c1f4881f57d54481b44e4c8a7779a, type: 3}
   Tags:
   - Regular Module
