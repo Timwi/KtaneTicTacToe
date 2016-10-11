@@ -57,7 +57,7 @@ public class TicTacToeModule : MonoBehaviour
     void Start()
     {
         for (int i = 0; i < 9; i++)
-            KeypadLabels[i].text = "XO "[Rnd.Range(0, 3)].ToString();
+            KeypadLabels[i].text = "";
         NextLabel.text = "";
         Module.OnActivate += ActivateModule;
     }
@@ -122,6 +122,7 @@ public class TicTacToeModule : MonoBehaviour
         _numOs = 0;
         _isSolved = false;
         _justPassed = false;
+        _isInitialized = false;
 
         StartCoroutine(delayedInitialization());
 
@@ -136,47 +137,30 @@ public class TicTacToeModule : MonoBehaviour
 
     IEnumerator delayedInitialization()
     {
-        _isInitialized = false;
-        yield return new WaitForSeconds(Rnd.Range(1f, 3f));
-        StartCoroutine(initWithJiggles(Rnd.Range(2, 4)));
-    }
+        yield return new WaitForSeconds(Rnd.Range(0f, 2f));
 
-    IEnumerator initWithJiggles(int numJigglesLeft)
-    {
-        yield return new WaitForSeconds(Rnd.Range(1f, 2f));
-        if (numJigglesLeft > 0)
+        // Place 4–6 pieces randomly without creating a tic-tac-toe
+        tryAgain:
+        var available = Enumerable.Range(0, 9).ToList();
+        var numPreplace = Rnd.Range(4, 7);
+        for (int i = 0; i < numPreplace; i++)
         {
-            StartCoroutine(showKeypadIter(i => " XO"[Rnd.Range(0, 3)].ToString(), () =>
-            {
-                StartCoroutine(initWithJiggles(numJigglesLeft - 1));
-            }));
+            tryPlaceAgain:
+            if (available.Count == 0)
+                goto tryAgain;
+            var placeX = Rnd.Range(0, 2) == 0;
+            var ix = Rnd.Range(0, available.Count);
+            var loc = available[ix];
+            available.RemoveAt(ix);
+            if (wouldCreateTicTacToe(placeX, loc))
+                goto tryPlaceAgain;
+            place(loc, placeX);
         }
-        else
-        {
-            // Place 4–6 pieces randomly without creating a tic-tac-toe
-            tryAgain:
-            var available = Enumerable.Range(0, 9).ToList();
-            var numPreplace = Rnd.Range(4, 7);
-            for (int i = 0; i < numPreplace; i++)
-            {
-                tryPlaceAgain:
-                if (available.Count == 0)
-                    goto tryAgain;
-                var placeX = Rnd.Range(0, 2) == 0;
-                var ix = Rnd.Range(0, available.Count);
-                var loc = available[ix];
-                available.RemoveAt(ix);
-                if (wouldCreateTicTacToe(placeX, loc))
-                    goto tryPlaceAgain;
-                place(loc, placeX);
-            }
 
-            displayKeypad();
-            yield return new WaitForSeconds(Rnd.Range(1f, 3f));
-            setNextItemRandom();
-            logNextExpectation();
-            _isInitialized = true;
-        }
+        displayKeypad();
+        setNextItemRandom();
+        logNextExpectation();
+        _isInitialized = true;
     }
 
     void setNextItemRandom()
