@@ -40,6 +40,8 @@ public class TicTacToeModule : MonoBehaviour
     // Remembers the physical order of the keys.
     KMSelectable[] _keypadButtonsPhysical;
 
+    bool[] _buttonDepressed;
+
     int _curRow;
     bool _nextUpIsX;
 
@@ -51,7 +53,6 @@ public class TicTacToeModule : MonoBehaviour
     bool _isSolved;
     bool _justPassed;
 
-    bool _isActivated = false;
     bool _isInitialized = false;
 
     void Start()
@@ -59,25 +60,23 @@ public class TicTacToeModule : MonoBehaviour
         for (int i = 0; i < 9; i++)
             KeypadLabels[i].text = "";
         NextLabel.text = "";
+
+        _buttonDepressed = new bool[10];
+
+        // Remember where each button is physically located
+        _keypadButtonsPhysical = KeypadButtons.ToArray();
+
+        for (int i = 0; i < 9; i++)
+        {
+            var j = i;
+            _keypadButtonsPhysical[i].OnInteract += () => HandlePress(physicalToScrambled(j));
+        }
+        PassButton.OnInteract += () => HandlePress(null);
         Module.OnActivate += ActivateModule;
     }
 
     void ActivateModule()
     {
-        if (!_isActivated)
-        {
-            // Remember where each button is physically located
-            _keypadButtonsPhysical = KeypadButtons.ToArray();
-
-            for (int i = 0; i < 9; i++)
-            {
-                var j = i;
-                _keypadButtonsPhysical[i].OnInteract += () => HandlePress(physicalToScrambled(j));
-            }
-            PassButton.OnInteract += () => HandlePress(null);
-            _isActivated = true;
-        }
-
         // Randomize the order of the keypad buttons
         for (int i = 0; i < 8; i++)
         {
@@ -306,14 +305,23 @@ public class TicTacToeModule : MonoBehaviour
         return wouldCreateTicTacToe(nextUpIsX, _data[curRow][column]) ? (int?)null : _data[curRow][column];
     }
 
+    IEnumerator restoreButton(KMSelectable btn, int? index)
+    {
+        yield return new WaitForSeconds(.1f);
+        btn.transform.Translate(0, 0, .005f);
+        _buttonDepressed[index ?? 9] = false;
+    }
+
     bool HandlePress(int? index)
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, this.transform);
 
-        if (!_isActivated)
+        var btn = index == null ? PassButton : KeypadButtons[index.Value];
+        if (!_buttonDepressed[index ?? 9])
         {
-            Debug.Log("[TicTacToe] Button pressed before module was activated!");
-            return false;
+            _buttonDepressed[index ?? 9] = true;
+            btn.transform.Translate(0, 0, -.005f);
+            StartCoroutine(restoreButton(btn, index));
         }
 
         if (!_isInitialized)
