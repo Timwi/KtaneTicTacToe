@@ -140,6 +140,7 @@ public class TicTacToeModule : MonoBehaviour
 
         // Place 4–6 pieces randomly without creating a tic-tac-toe
         tryAgain:
+        _placedX = new bool?[9];
         var available = Enumerable.Range(0, 9).ToList();
         var numPreplace = Rnd.Range(4, 7);
         for (int i = 0; i < numPreplace; i++)
