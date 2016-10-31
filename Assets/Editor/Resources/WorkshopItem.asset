@@ -12,16 +12,16 @@ MonoBehaviour:
   m_Name: WorkshopItem
   m_EditorClassIdentifier: 
   WorkshopPublishedFileID: 776667407
-  Title: Tic Tac Toe
+  Title: Tic-Tac-Toe
   Description: 'The expert plays tic-tac-toe... while the defuser inputs keys blindly.
 
 
     Module created by Moon, implemented by Timwi.
 
 
-    Manual HTML: http://ktane.timwi.de/TicTacToe/TicTacToe.html
+    [url=http://ktane.timwi.de/PDF/Tic-Tac-Toe.pdf]Manual PDF[/url]
 
-    Manual PDF: http://ktane.timwi.de/TicTacToe/TicTacToe.pdf'
+    [url=http://ktane.timwi.de/HTML/Tic-Tac-Toe.html]Manual HTML[/url]'
   PreviewImage: {fileID: 2800000, guid: bd5c1f4881f57d54481b44e4c8a7779a, type: 3}
   Tags:
   - Regular Module
