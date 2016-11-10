@@ -125,8 +125,6 @@ public class TicTacToeModule : MonoBehaviour
 
         StartCoroutine(delayedInitialization());
 
-        Debug.Log(string.Join("", Enumerable.Range(0, 9).Select(i => (physicalToScrambled(i) + 1) + (i % 3 == 2 ? "\n" : " ")).ToArray()));
-
         Debug.Log("[TicTacToe] Serial number is " + (isSerialEven ? "even" : "odd"));
         Debug.Log("[TicTacToe] Parallel port: " + (hasParallel ? "Yes" : "No"));
         Debug.Log("[TicTacToe] Lit indicators: " + numLitIndicators);
@@ -157,10 +155,20 @@ public class TicTacToeModule : MonoBehaviour
             place(loc, placeX);
         }
 
+        logKeypad("Initialized.");
         displayKeypad();
         setNextItemRandom();
         logNextExpectation();
         _isInitialized = true;
+    }
+
+    private void logKeypad(string line = "")
+    {
+        Debug.LogFormat("[TicTacToe] {0} Keypad is now:\n{1}Up Next: {2}\nCurrent Row: {3}",
+            line,
+            string.Join("", Enumerable.Range(0, 9).Select(i => (_placedX[physicalToScrambled(i)] == null ? (physicalToScrambled(i) + 1).ToString() : _placedX[physicalToScrambled(i)].Value ? "X" : "O") + (i % 3 == 2 ? "\n" : " ")).ToArray()),
+            _nextUpIsX ? "X" : "O",
+            _curRow + 1);
     }
 
     void setNextItemRandom()
@@ -206,11 +214,13 @@ public class TicTacToeModule : MonoBehaviour
             _isSolved = true;
             NextLabel.text = "";
             Module.HandlePass();
+            Debug.Log("[TicTacToe] Module solved.");
         }
         else
         {
             setNextItemRandom();
             _curRow = (_curRow + 1) % 9;
+            logKeypad(string.Format("{2} {0} in {1}.", x ? "X" : "O", scrIndex + 1, display ? "Auto-placed" : "Placed"));
         }
 
         emptyKeypad(() =>
@@ -275,7 +285,7 @@ public class TicTacToeModule : MonoBehaviour
         // Check “\” diagonal
         if (origX == origY && _placedX[physicalToScrambled(((origX + 1) % 3) * 4)] == nextUpIsX && _placedX[physicalToScrambled(((origX + 2) % 3) * 4)] == nextUpIsX)
             return true;
-        
+
         // Check “/” diagonal
         if (origX == 2 - origY && _placedX[physicalToScrambled(6 - 2 * ((origX + 1) % 3))] == nextUpIsX && _placedX[physicalToScrambled(6 - 2 * ((origX + 2) % 3))] == nextUpIsX)
             return true;
@@ -303,7 +313,7 @@ public class TicTacToeModule : MonoBehaviour
         }
 
         // If this would create a tic-tac-toe, we expect a PASS, otherwise we expect the correct button
-        return wouldCreateTicTacToe(nextUpIsX, _data[curRow][column]) ? (int?)null : _data[curRow][column];
+        return wouldCreateTicTacToe(nextUpIsX, _data[curRow][column]) ? (int?) null : _data[curRow][column];
     }
 
     IEnumerator restoreButton(KMSelectable btn, int? index)
