@@ -325,8 +325,6 @@ public class TicTacToeModule : MonoBehaviour
 
     bool HandlePress(int? index)
     {
-        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, this.transform);
-
         var btn = index == null ? PassButton : KeypadButtons[index.Value];
         if (!_buttonDepressed[index ?? 9])
         {
@@ -334,6 +332,9 @@ public class TicTacToeModule : MonoBehaviour
             btn.transform.Translate(0, 0, -.005f);
             StartCoroutine(restoreButton(btn, index));
         }
+
+        btn.AddInteractionPunch(.5f);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, btn.transform);
 
         if (!_isInitialized)
         {
