@@ -243,7 +243,7 @@ public class AssetBundler
         {
             case PlatformID.MacOSX:
             case PlatformID.Unix:
-                unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.app", "Unity.app/Contents/Frameworks/Managed/");
+                unityAssembliesLocation = EditorApplication.applicationPath.Replace("Unity.app", "Unity.app/Contents/Managed/");
                 break;
             case PlatformID.Win32NT:
             default:
@@ -281,18 +281,18 @@ public class AssetBundler
 
         //Start compiling
         beginCompilingMethod.Invoke(monoCompiler, null);
-        while (!(bool) pollMethod.Invoke(monoCompiler, null))
+        while (!(bool)pollMethod.Invoke(monoCompiler, null))
         {
             System.Threading.Thread.Sleep(50);
         }
 
         //Now check and output any messages returned by the compiler
         object returnedObj = getMessagesMethod.Invoke(monoCompiler, null);
-        object[] cmArray = ((Array) returnedObj).Cast<object>().ToArray();
+        object[] cmArray = ((Array)returnedObj).Cast<object>().ToArray();
 
         foreach (object cm in cmArray)
         {
-            string str = (string) messageField.GetValue(cm);
+            string str = (string)messageField.GetValue(cm);
             Debug.LogFormat("Compiler: {0}", str);
         }
 
@@ -446,7 +446,7 @@ public class AssetBundler
     /// </summary>
     protected void CopyModSettings()
     {
-        if (File.Exists("Assets/modSettings.json"))
+        if(File.Exists("Assets/modSettings.json"))
         {
             File.Copy("Assets/modSettings.json", outputFolder + "/modSettings.json");
         }
@@ -456,7 +456,7 @@ public class AssetBundler
     /// </summary>
     protected void CopyManual()
     {
-        if (Directory.Exists("Manual/pdfs"))
+        if(Directory.Exists("Manual/pdfs"))
         {
             DirectoryCopyPDFs("Manual/pdfs", outputFolder + "/Manual", true);
         }
@@ -489,11 +489,11 @@ public class AssetBundler
         foreach (FileInfo file in files)
         {
             string temppath = Path.Combine(destDirName, file.Name);
-            if (file.Extension.ToLower() == ".pdf")
+            if(file.Extension.ToLower() == ".pdf")
             {
                 file.CopyTo(temppath, false);
             }
-
+            
         }
 
         // If copying subdirectories, copy them and their contents to new location.
@@ -593,34 +593,33 @@ public class AssetBundler
             };
 
         string[] prefabsGUIDs = AssetDatabase.FindAssets("t: prefab");
-        foreach (string prefabGUID in prefabsGUIDs)
+        foreach(string prefabGUID in prefabsGUIDs)
         {
             string path = AssetDatabase.GUIDToAssetPath(prefabGUID);
             GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (go == null)
+            if(go == null)
             {
                 continue;
             }
-            foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>())
+            foreach(Renderer renderer in go.GetComponentsInChildren<Renderer>())
             {
-                Debug.Log(renderer.gameObject.name + " / " + renderer.GetType().FullName);
-                if (renderer.sharedMaterials != null && renderer.sharedMaterials.Length > 0)
+                if(renderer.sharedMaterials != null && renderer.sharedMaterials.Length > 0)
                 {
-                    if (renderer.gameObject.GetComponent<KMMaterialInfo>() == null)
+                    if(renderer.gameObject.GetComponent<KMMaterialInfo>() == null)
                     {
                         renderer.gameObject.AddComponent<KMMaterialInfo>();
                     }
                     KMMaterialInfo materialInfo = renderer.gameObject.GetComponent<KMMaterialInfo>();
                     materialInfo.ShaderNames = new List<string>();
-                    foreach (Material material in renderer.sharedMaterials)
+                    foreach(Material material in renderer.sharedMaterials)
                     {
                         materialInfo.ShaderNames.Add(material.shader.name);
 
-                        if (material.shader.name == "Standard")
+                        if(material.shader.name == "Standard")
                         {
                             Debug.LogWarning(string.Format("Use of Standard shader in object {0}. Standard shader should be avoided as it will cause your mod to break in future versions of the game.", renderer.gameObject));
                         }
-                        else if (!supportedShaders.Contains(material.shader.name))
+                        else if(!supportedShaders.Contains(material.shader.name))
                         {
                             Debug.LogWarning(string.Format("Use of custom shader {0} in object {1}. Use of custom shaders will break mod compatibility on game update requiring rebuild. Recommend using only supported shaders.", material.shader.name, renderer.gameObject));
                         }
