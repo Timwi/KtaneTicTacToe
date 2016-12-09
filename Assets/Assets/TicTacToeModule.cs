@@ -339,14 +339,12 @@ public class TicTacToeModule : MonoBehaviour
         if (!_isInitialized)
         {
             Debug.Log("[TicTacToe] Button pressed before module was initialized.");
-            Module.HandleStrike();
             return false;
         }
 
         if (_isSolved)
         {
-            // Pressing buttons after the module is already solved is not allowed!
-            Module.HandleStrike();
+            Debug.Log("[TicTacToe] Button pressed after module was solved.");
             return false;
         }
 
