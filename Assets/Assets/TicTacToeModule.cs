@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -136,12 +135,11 @@ public class TicTacToeModule : MonoBehaviour
     {
         yield return new WaitForSeconds(Rnd.Range(0f, 2f));
 
-        // Place 4–6 pieces randomly without creating a tic-tac-toe
+        // Place 5 pieces randomly without creating a tic-tac-toe
         tryAgain:
         _placedX = new bool?[9];
         var available = Enumerable.Range(0, 9).ToList();
-        var numPreplace = Rnd.Range(4, 7);
-        for (int i = 0; i < numPreplace; i++)
+        for (int i = 0; i < 5; i++)
         {
             tryPlaceAgain:
             if (available.Count == 0)
