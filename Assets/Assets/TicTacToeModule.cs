@@ -54,8 +54,13 @@ public class TicTacToeModule : MonoBehaviour
 
     bool _isInitialized = false;
 
+    static int _moduleIdCounter = 1;
+    int _moduleId;
+
     void Start()
     {
+        _moduleId = _moduleIdCounter++;
+
         for (int i = 0; i < 9; i++)
             KeypadLabels[i].text = "";
         NextLabel.text = "";
@@ -124,11 +129,8 @@ public class TicTacToeModule : MonoBehaviour
 
         StartCoroutine(delayedInitialization());
 
-        Debug.Log("[TicTacToe] Serial number is " + (isSerialEven ? "even" : "odd"));
-        Debug.Log("[TicTacToe] Parallel port: " + (hasParallel ? "Yes" : "No"));
-        Debug.Log("[TicTacToe] Lit indicators: " + numLitIndicators);
-        Debug.Log("[TicTacToe] Unlit indicators: " + numUnlitIndicators);
-        Debug.Log("[TicTacToe] Starting row: " + (_curRow + 1));
+        Debug.LogFormat("[TicTacToe #{0}] Starting row: {1} (serial number {2}, parallel port {3}, {4} indicators)",
+            _moduleId, _curRow + 1, isSerialEven ? "even" : "odd", hasParallel ? "Yes" : "No", numLitIndicators > numUnlitIndicators ? "more lit than unlit" : numLitIndicators < numUnlitIndicators ? "more unlit than lit" : "equal lit and unlit");
     }
 
     IEnumerator delayedInitialization()
@@ -162,11 +164,12 @@ public class TicTacToeModule : MonoBehaviour
 
     private void logKeypad(string line = "")
     {
-        Debug.LogFormat("[TicTacToe] {0} Keypad is now:\n{1}Up Next: {2}\nCurrent Row: {3}",
+        Debug.LogFormat("[TicTacToe #{4}] {0} Keypad is now:\n{1}Up Next: {2}\nCurrent Row: {3}",
             line,
             string.Join("", Enumerable.Range(0, 9).Select(i => (_placedX[physicalToScrambled(i)] == null ? (physicalToScrambled(i) + 1).ToString() : _placedX[physicalToScrambled(i)].Value ? "X" : "O") + (i % 3 == 2 ? "\n" : " ")).ToArray()),
             _nextUpIsX ? "X" : "O",
-            _curRow + 1);
+            _curRow + 1,
+            _moduleId);
     }
 
     void setNextItemRandom()
@@ -212,7 +215,7 @@ public class TicTacToeModule : MonoBehaviour
             _isSolved = true;
             NextLabel.text = "";
             Module.HandlePass();
-            Debug.Log("[TicTacToe] Module solved.");
+            Debug.LogFormat("[TicTacToe #{0}] Module solved.", _moduleId);
         }
         else
         {
@@ -336,22 +339,19 @@ public class TicTacToeModule : MonoBehaviour
 
         if (!_isInitialized)
         {
-            Debug.Log("[TicTacToe] Button pressed before module was initialized.");
+            Debug.LogFormat("[TicTacToe #{0}] Button pressed before module was initialized.", _moduleId);
             return false;
         }
 
         if (_isSolved)
-        {
-            Debug.Log("[TicTacToe] Button pressed after module was solved.");
             return false;
-        }
 
         var expectation = getExpectation(_nextUpIsX, ref _curRow);
         if (expectation == -1)
             // sanity check failed
             return false;
 
-        Debug.Log("[TicTacToe] Clicked " + (index == null ? "PASS" : (index + 1).ToString()) + "; expected " + (expectation == null ? "PASS" : (expectation + 1).ToString()));
+        Debug.LogFormat("[TicTacToe #{0}] Clicked {1}; expected {2}.", _moduleId, index == null ? "PASS" : (index + 1).ToString(), expectation == null ? "PASS" : (expectation + 1).ToString());
 
         if (index != expectation)
             strike();
@@ -390,7 +390,7 @@ public class TicTacToeModule : MonoBehaviour
         var expectation = getExpectation(_nextUpIsX, ref dummy);
         if (expectation == null && !_justPassed && getExpectation(!_nextUpIsX, ref dummy) == null)
             expectation = -2;
-        Debug.Log("[TicTacToe] Next expectation is " + (expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString()));
+        Debug.LogFormat("[TicTacToe #{0}] Next expectation is {1}.", _moduleId, expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString());
     }
 
     int physicalToScrambled(int physIndex)
