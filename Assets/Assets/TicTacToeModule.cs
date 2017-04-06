@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -401,5 +402,32 @@ public class TicTacToeModule : MonoBehaviour
     int scrambledToPhysical(int scrIndex)
     {
         return Array.IndexOf(_keypadButtonsPhysical, KeypadButtons[scrIndex]);
+    }
+
+    KMSelectable[] ProcessTwitchCommand(string command)
+    {
+        var btns = new List<KMSelectable>();
+        foreach (var cmd in command.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            switch (cmd.Replace("center", "middle").Replace("centre", "middle"))
+            {
+                case "tl": case "lt": case "topleft": case "lefttop": case "1": btns.Add(_keypadButtonsPhysical[0]); break;
+                case "tm": case "tc": case "mt": case "ct": case "topmiddle": case "middletop": case "2": btns.Add(_keypadButtonsPhysical[1]); break;
+                case "tr": case "rt": case "topright": case "righttop": case "3": btns.Add(_keypadButtonsPhysical[2]); break;
+
+                case "ml": case "cl": case "lm": case "lc": case "middleleft": case "leftmiddle": case "4": btns.Add(_keypadButtonsPhysical[3]); break;
+                case "mm": case "cm": case "mc": case "cc": case "middle": case "middlemiddle": case "5": btns.Add(_keypadButtonsPhysical[4]); break;
+                case "mr": case "cr": case "rm": case "rc": case "middleright": case "rightmiddle": case "6": btns.Add(_keypadButtonsPhysical[5]); break;
+
+                case "bl": case "lb": case "bottomleft": case "leftbottom": case "7": btns.Add(_keypadButtonsPhysical[6]); break;
+                case "bm": case "bc": case "mb": case "cb": case "bottommiddle": case "middlebottom": case "8": btns.Add(_keypadButtonsPhysical[7]); break;
+                case "br": case "rb": case "bottomright": case "rightbottom": case "9": btns.Add(_keypadButtonsPhysical[8]); break;
+
+                case "pass": case "0": btns.Add(PassButton); break;
+
+                default: return null;
+            }
+        }
+        return btns.ToArray();
     }
 }
