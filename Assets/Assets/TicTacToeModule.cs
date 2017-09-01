@@ -267,6 +267,7 @@ public class TicTacToeModule : MonoBehaviour
         Module.HandleStrike();
         _curRow = _startingRow;
         displayKeypad();
+        logNextExpectation(true);
     }
 
     bool wouldCreateTicTacToe(bool nextUpIsX, int scrambledIndex)
@@ -385,13 +386,13 @@ public class TicTacToeModule : MonoBehaviour
         return false;
     }
 
-    void logNextExpectation()
+    void logNextExpectation(bool didRowReset = false)
     {
         int dummy = _curRow;
         var expectation = getExpectation(_nextUpIsX, ref dummy);
         if (expectation == null && !_justPassed && getExpectation(!_nextUpIsX, ref dummy) == null)
             expectation = -2;
-        Debug.LogFormat("[TicTacToe #{0}] Next expectation is {1}.", _moduleId, expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString());
+        Debug.LogFormat("[TicTacToe #{0}] {2}Next expectation is {1}.", _moduleId, expectation == -2 ? "DOUBLE PASS" : expectation == null ? "PASS" : (expectation + 1).ToString(), didRowReset ? "Row reset to starting row. " : "");
     }
 
     int physicalToScrambled(int physIndex)
