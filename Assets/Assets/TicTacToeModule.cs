@@ -156,9 +156,9 @@ public class TicTacToeModule : MonoBehaviour
             place(loc, placeX);
         }
 
-        logKeypad("Initialized.");
         displayKeypad();
         setNextItemRandom();
+        logKeypad("Initialized.");
         logNextExpectation();
         _isInitialized = true;
     }
