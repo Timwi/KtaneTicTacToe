@@ -19,7 +19,7 @@ public class TicTacToeModule : MonoBehaviour
     public KMSelectable PassButton;
     public TextMesh NextLabel;
 
-    // The order of these is scrambled in Start().
+    // The order of these is scrambled in ActivateModule().
     public KMSelectable[] KeypadButtons;
     // The order of these is in sync with KeypadButtons.
     public TextMesh[] KeypadLabels;
@@ -404,6 +404,10 @@ public class TicTacToeModule : MonoBehaviour
     {
         return Array.IndexOf(_keypadButtonsPhysical, KeypadButtons[scrIndex]);
     }
+
+#pragma warning disable 414
+    private string TwitchHelpMessage = @"Press a button with “!{0} tl” or “!{0} 1”. Buttons are tl, tm, tr, ml, mm, mr, bl, bm, br, or numbers 1–9. Use “!{0} pass” or “!{0} 0” to press the PASS button.";
+#pragma warning restore 414
 
     KMSelectable[] ProcessTwitchCommand(string command)
     {
