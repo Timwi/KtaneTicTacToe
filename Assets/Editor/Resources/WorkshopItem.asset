@@ -21,9 +21,7 @@ MonoBehaviour:
 
     [url=http://ktane.timwi.de/PDF/Tic-Tac-Toe.pdf]Manual PDF[/url]
 
-    [url=http://ktane.timwi.de/HTML/Tic-Tac-Toe.html]Manual HTML[/url]
-
-    [b][url=https://www.youtube.com/watch?v=83G6idV3Xok]Tutorial video[/url] (thanks Elias!)[/b]'
+    [url=http://ktane.timwi.de/HTML/Tic-Tac-Toe.html]Manual HTML[/url]'
   PreviewImage: {fileID: 2800000, guid: bd5c1f4881f57d54481b44e4c8a7779a, type: 3}
   Tags:
   - Regular Module
