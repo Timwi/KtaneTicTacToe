@@ -406,7 +406,7 @@ public class TicTacToeModule : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private string TwitchHelpMessage = @"Press a button with “!{0} tl” or “!{0} 1”. Buttons are tl, tm, tr, ml, mm, mr, bl, bm, br, or numbers 1–9. Use “!{0} pass” or “!{0} 0” to press the PASS button.";
+    private readonly string TwitchHelpMessage = @"Press a button with “!{0} tl” or “!{0} 1”. Buttons are tl, tm, tr, ml, mm, mr, bl, bm, br, or numbered 1–9 in reading order. Use “!{0} pass” or “!{0} 0” to press the PASS button.";
 #pragma warning restore 414
 
     KMSelectable[] ProcessTwitchCommand(string command)
