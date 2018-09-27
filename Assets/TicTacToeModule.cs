@@ -128,7 +128,7 @@ public class TicTacToeModule : MonoBehaviour
 
         _conditions['b'] = array<Func<KMBombInfo, bool>>(
             // the bomb has any AA batteries
-            b => b.GetBatteryCount(Battery.AA) > 0,
+            b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4) > 0,
             // the bomb has any D batteries
             b => b.GetBatteryCount(Battery.D) > 0,
             // the bomb has an even number of batteries
@@ -186,7 +186,7 @@ public class TicTacToeModule : MonoBehaviour
                     // ["the first numeric digit in the serial number is greater than the number of batteries", "the first numeric digit in the serial number is smaller than the number of batteries", "the first numeric digit in the serial number is equal to the number of batteries"],
                     new ComparableDirect(b => b.GetSerialNumberNumbers().First(), b => b.GetBatteryCount()),
                     // ["the first numeric digit in the serial number is greater than the number of AA batteries", "the first numeric digit in the serial number is smaller than the number of AA batteries", "the first numeric digit in the serial number is equal to the number of AA batteries"],
-                    new ComparableDirect(b => b.GetSerialNumberNumbers().First(), b => b.GetBatteryCount(Battery.AA)),
+                    new ComparableDirect(b => b.GetSerialNumberNumbers().First(), b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4)),
                     // ["the first numeric digit in the serial number is greater than the number of D batteries", "the first numeric digit in the serial number is smaller than the number of D batteries", "the first numeric digit in the serial number is equal to the number of D batteries"],
                     new ComparableDirect(b => b.GetSerialNumberNumbers().First(), b => b.GetBatteryCount(Battery.D)),
                     // ["the first numeric digit in the serial number is greater than the number of battery holders", "the first numeric digit in the serial number is smaller than the number of battery holders", "the first numeric digit in the serial number is equal to the number of battery holders"],
@@ -194,7 +194,7 @@ public class TicTacToeModule : MonoBehaviour
                     // ["the last numeric digit in the serial number is greater than the number of batteries", "the last numeric digit in the serial number is smaller than the number of batteries", "the last numeric digit in the serial number is equal to the number of batteries"],
                     new ComparableDirect(b => b.GetSerialNumberNumbers().Last(), b => b.GetBatteryCount()),
                     // ["the last numeric digit in the serial number is greater than the number of AA batteries", "the last numeric digit in the serial number is smaller than the number of AA batteries", "the last numeric digit in the serial number is equal to the number of AA batteries"],
-                    new ComparableDirect(b => b.GetSerialNumberNumbers().Last(), b => b.GetBatteryCount(Battery.AA)),
+                    new ComparableDirect(b => b.GetSerialNumberNumbers().Last(), b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4)),
                     // ["the last numeric digit in the serial number is greater than the number of D batteries", "the last numeric digit in the serial number is smaller than the number of D batteries", "the last numeric digit in the serial number is equal to the number of D batteries"],
                     new ComparableDirect(b => b.GetSerialNumberNumbers().Last(), b => b.GetBatteryCount(Battery.D)),
                     // ["the last numeric digit in the serial number is greater than the number of battery holders", "the last numeric digit in the serial number is smaller than the number of battery holders", "the last numeric digit in the serial number is equal to the number of battery holders"],
@@ -222,7 +222,7 @@ public class TicTacToeModule : MonoBehaviour
                     // ["the bomb has more ports than batteries", "the bomb has more batteries than ports", "the bomb has an equal number of ports and batteries"],
                     new ComparableDirect(b => b.GetPortCount(), b => b.GetBatteryCount()),
                     // ["the bomb has more ports than AA batteries", "the bomb has more AA batteries than ports", "the bomb has an equal number of ports and AA batteries"],
-                    new ComparableDirect(b => b.GetPortCount(), b => b.GetBatteryCount(Battery.AA)),
+                    new ComparableDirect(b => b.GetPortCount(), b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4)),
                     // ["the bomb has more ports than D batteries", "the bomb has more D batteries than ports", "the bomb has an equal number of ports and D batteries"],
                     new ComparableDirect(b => b.GetPortCount(), b => b.GetBatteryCount(Battery.D)),
                     // ["the bomb has more ports than battery holders", "the bomb has more battery holders than ports", "the bomb has an equal number of ports and battery holders"],
@@ -231,7 +231,7 @@ public class TicTacToeModule : MonoBehaviour
                     // ["the bomb has more port plates than batteries", "the bomb has more batteries than port plates", "the bomb has an equal number of port plates and batteries"],
                     new ComparableDirect(b => b.GetPortPlateCount(), b => b.GetBatteryCount()),
                     // ["the bomb has more port plates than AA batteries", "the bomb has more AA batteries than port plates", "the bomb has an equal number of port plates and AA batteries"],
-                    new ComparableDirect(b => b.GetPortPlateCount(), b => b.GetBatteryCount(Battery.AA)),
+                    new ComparableDirect(b => b.GetPortPlateCount(), b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4)),
                     // ["the bomb has more port plates than D batteries", "the bomb has more D batteries than port plates", "the bomb has an equal number of port plates and D batteries"],
                     new ComparableDirect(b => b.GetPortPlateCount(), b => b.GetBatteryCount(Battery.D)),
                     // ["the bomb has more port plates than battery holders", "the bomb has more battery holders than port plates", "the bomb has an equal number of port plates and battery holders"],
@@ -240,7 +240,7 @@ public class TicTacToeModule : MonoBehaviour
                     // ["the bomb has more unique port types than batteries", "the bomb has more batteries than unique port types", "the bomb has an equal number of unique port types and batteries"],
                     new ComparableDirect(b => b.CountUniquePorts(), b => b.GetBatteryCount()),
                     // ["the bomb has more unique port types than AA batteries", "the bomb has more AA batteries than unique port types", "the bomb has an equal number of unique port types and AA batteries"],
-                    new ComparableDirect(b => b.CountUniquePorts(), b => b.GetBatteryCount(Battery.AA)),
+                    new ComparableDirect(b => b.CountUniquePorts(), b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4)),
                     // ["the bomb has more unique port types than D batteries", "the bomb has more D batteries than unique port types", "the bomb has an equal number of unique port types and D batteries"],
                     new ComparableDirect(b => b.CountUniquePorts(), b => b.GetBatteryCount(Battery.D)),
                     // ["the bomb has more unique port types than battery holders", "the bomb has more battery holders than unique port types", "the bomb has an equal number of unique port types and battery holders"],
@@ -269,11 +269,11 @@ public class TicTacToeModule : MonoBehaviour
                     // ["the bomb has more battery holders than unlit indicators", "the bomb has more unlit indicators than battery holders", "the bomb has an equal number of battery holders and unlit indicators"],
                     new ComparableDirect(b => b.GetBatteryHolderCount(), b => b.GetOffIndicators().Count()),
                     // ["the bomb has more AA batteries than indicators", "the bomb has more indicators than AA batteries", "the bomb has an equal number of AA batteries and indicators"],
-                    new ComparableDirect(b => b.GetBatteryCount(Battery.AA), b => b.GetIndicators().Count()),
+                    new ComparableDirect(b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4), b => b.GetIndicators().Count()),
                     // ["the bomb has more AA batteries than lit indicators", "the bomb has more lit indicators than AA batteries", "the bomb has an equal number of AA batteries and lit indicators"],
-                    new ComparableDirect(b => b.GetBatteryCount(Battery.AA), b => b.GetOnIndicators().Count()),
+                    new ComparableDirect(b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4), b => b.GetOnIndicators().Count()),
                     // ["the bomb has more AA batteries than unlit indicators", "the bomb has more unlit indicators than AA batteries", "the bomb has an equal number of AA batteries and unlit indicators"],
-                    new ComparableDirect(b => b.GetBatteryCount(Battery.AA), b => b.GetOffIndicators().Count()),
+                    new ComparableDirect(b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4), b => b.GetOffIndicators().Count()),
                     // ["the bomb has more D batteries than indicators", "the bomb has more indicators than D batteries", "the bomb has an equal number of D batteries and indicators"],
                     new ComparableDirect(b => b.GetBatteryCount(Battery.D), b => b.GetIndicators().Count()),
                     // ["the bomb has more D batteries than lit indicators", "the bomb has more lit indicators than D batteries", "the bomb has an equal number of D batteries and lit indicators"],
@@ -284,7 +284,7 @@ public class TicTacToeModule : MonoBehaviour
 
         _comparisons['b'] = list<ComparableCriterion>(
             // ["the bomb has more AA batteries than D batteries", "the bomb has more D batteries than AA batteries", "the bomb has an equal number of AA and D batteries"],
-            new ComparableDirect(b => b.GetBatteryCount(Battery.AA), b => b.GetBatteryCount(Battery.D)));
+            new ComparableDirect(b => b.GetBatteryCount(Battery.AA) + b.GetBatteryCount(Battery.AAx3) + b.GetBatteryCount(Battery.AAx4), b => b.GetBatteryCount(Battery.D)));
 
         var ports = new[] { Port.Parallel, Port.Serial, Port.PS2, Port.DVI, Port.StereoRCA, Port.RJ45 };
         for (var i = 0; i < ports.Length; i++)
