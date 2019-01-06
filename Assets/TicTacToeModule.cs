@@ -337,6 +337,7 @@ public class TicTacToeModule : MonoBehaviour
         _moduleId = _moduleIdCounter++;
 
         var rnd = RuleSeedable.GetRNG();
+        Debug.LogFormat("[TicTacToe #{0}] Using rule seed: {1}", _moduleId, rnd.Seed);
         if (rnd.Seed == 1)
         {
             bool isSerialEven = "02468".Contains(Bomb.GetSerialNumber().Last());
