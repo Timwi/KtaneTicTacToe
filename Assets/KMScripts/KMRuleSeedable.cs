@@ -22,7 +22,7 @@ public class KMRuleSeedable : MonoBehaviour
         if (!ruleSeedModifierAPI.ContainsKey("RuleSeed"))
             return new MonoRandom(1);
 
-		// Add the module to the list of supported modules if possible.
+		//Add the module to the list of supported modules if possible.
 	    if (ruleSeedModifierAPI.ContainsKey("AddSupportedModule"))
 	    {
 		    string key;
