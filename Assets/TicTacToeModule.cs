@@ -25,8 +25,9 @@ public class TicTacToeModule : MonoBehaviour
     // The order of these is in sync with KeypadButtons.
     public TextMesh[] KeypadLabels;
 
-    int[][] _data;
-    static readonly int[][] _defaultData =
+    int[][] _table;
+    bool _waitingForNextItem;
+    static readonly int[][] _defaultTable =
     {
         new int[] { 8, 2, 2, 8, 7, 0 },
         new int[] { 4, 5, 5, 6, 0, 1 },
@@ -353,7 +354,7 @@ public class TicTacToeModule : MonoBehaviour
             Debug.LogFormat("[TicTacToe #{0}] Starting row: {1} (serial number {2}, parallel port {3}, {4} indicators)",
                 _moduleId, _startingRow + 1, isSerialEven ? "even" : "odd", hasParallel ? "Yes" : "No", numLitIndicators > numUnlitIndicators ? "more lit than unlit" : numLitIndicators < numUnlitIndicators ? "more unlit than lit" : "equal lit and unlit");
 
-            _data = _defaultData;
+            _table = _defaultTable;
         }
         else
         {
@@ -391,15 +392,15 @@ public class TicTacToeModule : MonoBehaviour
             Debug.LogFormat("[TicTacToe #{0}] Starting row: {1} (condition 1 = {2}, condition 2 = {3}, comparison: {4} {5} {6})",
                 _moduleId, _startingRow + 1, condition1, condition2, v1, v1 > v2 ? ">" : v1 < v2 ? "<" : "=", v2);
 
-            _data = new int[9][];
+            _table = new int[9][];
             for (int i = 0; i < 9; i++)
-                _data[i] = new int[6];
+                _table[i] = new int[6];
 
             var digits = rnd.ShuffleFisherYates(Enumerable.Range(0, 9).ToArray());
             for (var column = 0; column < 6; column++)
             {
                 for (var i = 0; i < 9; i++)
-                    _data[i][column] = digits[i];
+                    _table[i][column] = digits[i];
                 rnd.ShuffleFisherYates(digits);
             }
         }
@@ -502,6 +503,7 @@ public class TicTacToeModule : MonoBehaviour
 
     IEnumerator setNextItemIter(string text)
     {
+        _waitingForNextItem = true;
         var iter = ++_setNextItemIter;
         yield return new WaitForSeconds(Rnd.Range(.5f, 1.5f));
         if (!_isSolved && iter == _setNextItemIter)
@@ -509,6 +511,7 @@ public class TicTacToeModule : MonoBehaviour
             NextLabel.text = text;
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.TitleMenuPressed, this.transform);
         }
+        _waitingForNextItem = false;
     }
 
     void place(int scrIndex, bool x, bool display = false)
@@ -614,7 +617,7 @@ public class TicTacToeModule : MonoBehaviour
         // Which button did we expect to be pressed next?
         var column = (_numXs > _numOs ? 0 : _numXs == _numOs ? 2 : 4) + (nextUpIsX ? 0 : 1);
         var origRow = curRow;
-        while (_placedX[_data[curRow][column]] != null)
+        while (_placedX[_table[curRow][column]] != null)
         {
             curRow = (curRow + 1) % 9;
             if (curRow == origRow)
@@ -629,7 +632,7 @@ public class TicTacToeModule : MonoBehaviour
         }
 
         // If this would create a tic-tac-toe, we expect a PASS, otherwise we expect the correct button
-        return wouldCreateTicTacToe(nextUpIsX, _data[curRow][column]) ? (int?) null : _data[curRow][column];
+        return wouldCreateTicTacToe(nextUpIsX, _table[curRow][column]) ? (int?) null : _table[curRow][column];
     }
 
     IEnumerator restoreButton(KMSelectable btn, int? index)
@@ -747,5 +750,22 @@ public class TicTacToeModule : MonoBehaviour
             }
         }
         return btns.ToArray();
+    }
+
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        yield return null;
+        while (!_isSolved)
+        {
+            var dummy = _curRow;
+            var expectation = getExpectation(_nextUpIsX, ref dummy);
+            if (expectation == null)
+                PassButton.OnInteract();
+            else
+                KeypadButtons[expectation.Value].OnInteract();
+            while (_waitingForNextItem)
+                yield return true;
+            yield return new WaitForSeconds(0.5f);
+        }
     }
 }
