@@ -13,15 +13,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: TicTacToe
   title: Tic Tac Toe
-  description: 'The expert plays tic-tac-toe... while the defuser inputs keys blindly.
+  author: 
+  description: 'The expert plays tic tac toe... while the defuser inputs keys blindly.
 
 
     Module created by Moon, implemented by Timwi.
 
 
-    [url=http://ktane.timwi.de/PDF/Tic-Tac-Toe.pdf]Manual PDF[/url]
+    [url=http://ktane.timwi.de/PDF/Tic Tac Toe.pdf]Manual PDF[/url]
 
-    [url=http://ktane.timwi.de/HTML/Tic-Tac-Toe.html]Manual HTML[/url]
+    [url=http://ktane.timwi.de/HTML/Tic Tac Toe.html]Manual HTML[/url]
 
     [b][url=https://www.youtube.com/watch?v=83G6idV3Xok]Tutorial video[/url] (thanks
     Elias!)[/b]'
