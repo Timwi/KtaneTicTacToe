@@ -24,8 +24,12 @@ public class TicTacToeModule : MonoBehaviour
     public KMSelectable[] KeypadButtons;
     // The order of these is in sync with KeypadButtons.
     public TextMesh[] KeypadLabels;
+    // The letter I
+    public GameObject LetterI;
 
     int[][] _table;
+    int _apfValue;
+    int _apfIndex;
     bool _waitingForNextItem;
     static readonly int[][] _defaultTable =
     {
@@ -39,6 +43,8 @@ public class TicTacToeModule : MonoBehaviour
         new int[] { 1, 1, 8, 4, 1, 4 },
         new int[] { 2, 8, 3, 2, 5, 6 }
     };
+
+    bool _aprilFools;
 
     abstract class ComparableCriterion { }
     sealed class ComparableDirect : ComparableCriterion
@@ -336,6 +342,9 @@ public class TicTacToeModule : MonoBehaviour
     void Start()
     {
         _moduleId = _moduleIdCounter++;
+        string day = System.DateTime.Now.ToString("MM/dd");
+        if (day == "04/01")
+            _aprilFools = true;
 
         var rnd = RuleSeedable.GetRNG();
         Debug.LogFormat("[TicTacToe #{0}] Using rule seed: {1}", _moduleId, rnd.Seed);
@@ -421,6 +430,10 @@ public class TicTacToeModule : MonoBehaviour
         }
         PassButton.OnInteract += () => HandlePress(null);
         Module.OnActivate += ActivateModule;
+
+        // APRIL FOOLS
+        LetterI.SetActive(false);
+        _apfValue = Rnd.Range(4, 10);
     }
 
     void ActivateModule()
@@ -508,6 +521,16 @@ public class TicTacToeModule : MonoBehaviour
         yield return new WaitForSeconds(Rnd.Range(.5f, 1.5f));
         if (!_isSolved && iter == _setNextItemIter)
         {
+            if (_aprilFools)
+                _apfIndex++;
+            if (_apfIndex == _apfValue)
+            {
+                LetterI.SetActive(true);
+                Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.TitleMenuPressed, this.transform);
+                yield return new WaitForSeconds(1.0f);
+                LetterI.SetActive(false);
+                yield return new WaitForSeconds(.5f);
+            }
             NextLabel.text = text;
             Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.TitleMenuPressed, this.transform);
         }
