@@ -429,6 +429,7 @@ public class TicTacToeModule : MonoBehaviour
         for (int i = 0; i < 8; i++)
         {
             var index = Rnd.Range(0, 9 - i);
+            Debug.LogFormat("<TicTacToe #{0}> Button shuffle: picked {1}.", _moduleId, index);
             var t1 = KeypadButtons[index];
             KeypadButtons[index] = KeypadButtons[8 - i];
             KeypadButtons[8 - i] = t1;
@@ -462,7 +463,9 @@ public class TicTacToeModule : MonoBehaviour
             if (available.Count == 0)
                 goto tryAgain;
             var placeX = Rnd.Range(0, 2) == 0;
+            Debug.LogFormat("<TicTacToe #{0}> Preplace: picked {1}.", _moduleId, placeX ? "X" : "O");
             var ix = Rnd.Range(0, available.Count);
+            Debug.LogFormat("<TicTacToe #{0}> Preplace: picked index {1}.", _moduleId, ix);
             var loc = available[ix];
             available.RemoveAt(ix);
             if (wouldCreateTicTacToe(placeX, loc))
